@@ -29,171 +29,7 @@ Any object cached in a session will not be visible to other sessions and when th
 
 ---
 
-### The first-level cache:
-
-The first level cache type is the session cache. The session cache caches object within the current session but this is not enough for long level i.e. session factory scope.
-
-
-**First Level Cache in Hibernate Important Points**
-
-Important Points about First level cache in Hibernate that can be derived from above program are:
-
-1. Hibernate First Level cache is enabled by default, there are no configurations needed for this.
-
-2. Hibernate first level cache is session specific, that’s why when we are getting the same data in same session there is no query fired whereas in other session query is fired to load the data.
-
-3. Hibernate first level cache can have old values, but it didn’t get reflected in the same session. But in other session, we got the updated value.
-
-4. We can use session `evict()` method to remove a single object from the hibernate first level cache.
-
-5. We can use session `clear()` method to clear the cache i.e delete all the objects from the cache.
-
-6. We can use session `contains()` method to check if an object is present in the hibernate cache or not, if the object is found in cache, it returns true or else it returns false.
-
-7. Since hibernate cache all the objects into session first level cache, while running bulk queries or batch updates it’s necessary to clear the cache at certain intervals to avoid memory issues.
-
-
-### First level cache retrieval example
-
-In this example, we are fetching student object from the database using a hibernate session. we will retrieve it multiple times and will observe the SQL logs to see the differences
-
-```
-package com.codedictator.test;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
-import com.codedictator.domain.Product;
-
-public class FirstLevelCacheDemo {
-	public static void main(String[] args) {
-
-		Transaction transaction = null;
-		Configuration configuration = new Configuration().configure();
-		SessionFactory sessionFactory = configuration.buildSessionFactory();
-		try (Session session = sessionFactory.openSession();) {
-
-			// start the transaction
-			transaction = session.beginTransaction();
-
-			// get the student entity using id
-			Product student1 = session.load(Product.class, 1L);
-
-			System.out.println(student1.getName());
-			System.out.println(student1.getModel());
-			System.out.println(student1.getPrice());
-
-			// load student entity by id
-			Product student2 = session.load(Product.class, 1L);
-			System.out.println(student2.getName());
-			System.out.println(student2.getModel());
-			System.out.println(student2.getPrice());
-
-			// commit transaction
-			transaction.commit();
-		}
-	}
-}
-```
-
-```
-Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
-Mobile
-iPhone5
-20000.0
-Mobile
-iPhone5
-20000.0
-```
-
-***As you can see that second “session.load()” statement does not execute the select query again and loads the student entity directly.***
-
----
-
-### Removing cache objects from first level cache example
-
-Though we can not disable the first level cache in hibernate, we can certainly remove some of the objects from it when needed. This is done using two methods :
-
-- `Session.evict()`
-
-- `Session.clear()`
-
-Here `Session.evict()` is used to remove a particular object from the cache associated with a session, and a `clear()` method is used to remove all cached objects associated with a session. So they are essentially like remove one and remove all.
-
-```
-package com.codedictator.test;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
-import com.codedictator.domain.Product;
-
-public class RemoveFirstCacheDemo {
-	public static void main(String[] args) {
-		Transaction transaction = null;
-		Configuration configuration = new Configuration().configure();
-		SessionFactory sessionFactory = configuration.buildSessionFactory();
-
-		try (Session session = sessionFactory.openSession();) {
-			// start the transaction
-			transaction = session.beginTransaction();
-
-			// get the student entity using id
-			Product product1 = session.load(Product.class, 1L);
-
-			System.out.println(product1.getName());
-			System.out.println(product1.getModel());
-			System.out.println(product1.getPrice());
-
-			// load student entity by id
-			Product product2 = session.load(Product.class, 1L);
-			System.out.println(product2.getName());
-			System.out.println(product2.getModel());
-			System.out.println(product2.getPrice());
-
-			// remove obj
-			session.evict(product2);
-			System.out.println("==>" + product2.getName());
-
-			// load student entity by id
-			Product product3 = session.load(Product.class, 1L);
-			System.out.println(product3.getName());
-			System.out.println(product3.getModel());
-			System.out.println(product3.getPrice());
-
-			// clear session
-			session.clear();
-			// commit transaction
-			transaction.commit();
-		}
-	}
-}
-```
-
-```
-Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
-Mobile
-iPhone5
-20000.0
-Mobile
-iPhone5
-20000.0
-==>Mobile
-Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
-Mobile
-iPhone5
-20000.0
-```
-
-***Clearly, `Session.evict()` method removed the student object from the cache so that it was fetched again from the database.***
-
----
-
-### The second-level cache:
+## The second-level cache:
 
 The second-level cache is called ‘second-level’ because there is already a cache operating for you in Hibernate for the duration you have a session open. A Hibernate Session is a transaction-level cache of persistent data. It is possible to configure a SessionFactory-level cache on a class-by-class and collection-by-collection basis.
 
@@ -209,69 +45,209 @@ Hibernate uses **first-level cache** by default and you have nothing to do to us
 
 The **second-level** cache exists as long as the session factory is alive. The second-level cache holds on to the ‘data’ for all properties and associations (and collections if requested) for individual entities that are marked to be cached.
 
+One of the major benefit of using Hibernate in large application is it’s support for cache, hence reducing database queries and better performance.
+
+**Hibernate Second Level cache** providers include **`EHCache`** and **`Infinispan`**, but EHCache is more popular and we will use it for our example project. However before we move to our project, we should know different strategies for caching an object.
+
+1. **Read Only:** This caching strategy should be used for persistent objects that will always read but never updated. It’s good for reading and caching application configuration and other static data that are never updated. This is the simplest strategy with best performance because there is no overload to check if the object is updated in database or not.
+
+2. **Read Write:** It’s good for persistent objects that can be updated by the hibernate application. However if the data is updated either through backend or other applications, then there is no way hibernate will know about it and data might be stale. So while using this strategy, make sure you are using Hibernate API for updating the data.
+
+3. **Nonrestricted Read Write:** If the application only occasionally needs to update data and strict transaction isolation is not required, a nonstrict-read-write cache might be appropriate.
+
+4. **Transactional:** The transactional cache strategy provides support for fully transactional cache providers such as JBoss TreeCache. Such a cache can only be used in a JTA environment and you must specify hibernate.transaction.manager_lookup_class.
+
+
+### Hibernate EHCache
+
+Since EHCache supports all the above cache strategies, it’s the best choice when you are looking for second level cache in hibernate. I would not go into much detail about EHCache, my main focus will be to get it working for hibernate application.
+
+### Hibernate EHCache Maven Dependencies
+
+For hibernate second level cache, we would need to add ehcache-core and hibernate-ehcache dependencies in our application. EHCache uses slf4j for logging, so I have also added slf4j-simple for logging purposes. I am using the latest versions of all these APIs, there is a slight chance that hibernate-ehcache APIs are not compatible with the ehcache-core API, in that case you need to check the pom.xml of hibernate-ehcache to find out the correct version to use. Our final pom.xml looks like below.
+
+```
+<dependencies>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.1.0.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-ehcache</artifactId>
+			<version>5.1.0.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-c3p0</artifactId>
+			<version>5.1.0.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.6</version>
+		</dependency>
+	</dependencies>
+```
+
+### Hibernate Second Level Cache – Hibernate EHCache Configuration
+
+Hibernate Second level cache is disabled by default, so we would need to enable it and add some configurations to get it working. Our hibernate.cfg.xml file looks like below.
+
+
+```
+<hibernate-configuration>
+	<session-factory>
+		<!-- Data Source Details -->
+		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/hibernatedb</property>
+		<property name="hibernate.connection.username">root</property>
+		<property name="hibernate.connection.password">root</property>
+
+		<!-- Hibernate Properties -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+		<property name="hibernate.hbm2ddl.auto">update</property>
+		<property name="hibernate.show_sql">true</property>
+
+		<!-- Enable Second Level Cache -->
+		<property name="hibernate.cache.use_second_level_cache">true</property>
+		<property name="hibernate.cache.use_query_cache">true</property>
+		<property name="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
+		<property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</property>
+
+		<!-- Connection Pooling using C3P0 -->
+		<property name="hibernate.c3p0.min_size">50</property>
+		<property name="hibernate.c3p0.max_size">100</property>
+		<property name="hibernate.timeout">120</property>
+		<property name="hibernate.c3p0.max_statements">50</property>
+		<property name="hibernate.c3p0.idle_test_period">200</property>
+
+		<!-- Resource Mapping -->
+		<mapping class="com.codedictator.domain.Product" />
+	</session-factory>
+</hibernate-configuration>
+```
+
+**Some important points about hibernate second level cache configurations are:**
+
+1. **`hibernate.cache.region.factory_class`** is used to define the Factory class for Second level caching, I am using `org.hibernate.cache.ehcache.EhCacheRegionFactory` for this. If you want the factory class to be singleton, you should use `org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory` class.
+
+ 2. If you are using **Hibernate 3**, corresponding classes will be `net.sf.ehcache.hibernate.EhCacheRegionFactory` and `net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory`.
+
+3. `hibernate.cache.use_second_level_cache` is used to enable the second level cache.
+
+4. `hibernate.cache.use_query_cache` is used to enable the query cache, without it HQL queries results will not be cached.
+
+5. `net.sf.ehcache.configurationResourceName` is used to define the EHCache configuration file location, it’s an optional parameter and if it’s not present EHCache will try to locate ehcache.xml file in the application classpath.
+
+
+### Hibernate EHCache Configuration File
+
+Our EHCache configuration file myehcache.xml looks like below.
+
+```
+<ehcache xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="ehcache.xsd" updateCheck="true"
+	monitoring="autodetect" dynamicConfig="true">
+
+	<diskStore path="java.io.tmpdir/ehcache" />
+
+	<defaultCache maxEntriesLocalHeap="10000" eternal="true"
+		timeToIdleSeconds="120" timeToLiveSeconds="200"
+		diskSpoolBufferSizeMB="30" maxEntriesLocalDisk="10000000"
+		diskExpiryThreadIntervalSeconds="120" memoryStoreEvictionPolicy="LRU"
+		statistics="true" maxElementsInMemory="200">
+		<persistence strategy="localTempSwap" />
+	</defaultCache>
+
+	<!-- For specified object -->
+	<cache name="com.codedictator.domain.Product" eternal="true"
+		timeToLiveSeconds="200" timeToIdleSeconds="100"
+		maxElementsInMemory="200" maxEntriesLocalHeap="10000">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="org.hibernate.cache.internal.StandardQueryCache"
+		maxEntriesLocalHeap="5" eternal="false" timeToLiveSeconds="120">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="org.hibernate.cache.spi.UpdateTimestampsCache"
+		maxEntriesLocalHeap="5000" eternal="true">
+		<persistence strategy="localTempSwap" />
+	</cache>
+</ehcache>
+```
+
+Hibernate EHCache provides a lot of options, I won’t go into much detail but some of the important configurations above are:
+
+1. **diskStore:** EHCache stores data into memory but when it starts overflowing, it start writing data into file system. We use this property to define the location where EHCache will write the overflown data.
+
+2. **defaultCache:** It’s a mandatory configuration, it is used when an Object need to be cached and there are no caching regions defined for that.
+
+3. **cache name=”com.codedictator.domain.Product”:** We use cache element to define the region and it’s configurations. We can define multiple regions and their properties, while defining model beans cache properties, we can also define region with caching strategies. The cache properties are easy to understand and clear with the name.
+
+4. **Cache regions:** `org.hibernate.cache.internal.StandardQueryCache` and `org.hibernate.cache.spi.UpdateTimestampsCache` are defined because EHCache was giving warning to that.
+
 ---
 
-### In hibernate configuration file (hibernate.cfg.xml)  we wrote the following line.
-For Disabling the second level of cache we have to made following change to hibernate configuration file.
+### Hibernate Second Level Cache – Model Bean Caching Strategy
+
+We use `org.hibernate.annotations.Cache` annotation to provide the caching configuration. `org.hibernate.annotations.CacheConcurrencyStrategy` is used to define the caching strategy and we can also define the cache region to use for the model beans.
 
 ```
-<!-- Disable the second-level cache -->  
-<property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property> 
-```
- 
-### For Enabling the second level of cache we have to made following change to hibernate configuration file.
+package com.codedictator.domain;
 
-```
-<!-- Enable the second-level cache -->  
-<property name="cache.use_second_level_cache">true</property>
-   <property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property> 
-```
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
----
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-### 1. Cache Strategy using with Annotation as some changes made to the Model class also.
-
-```
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Entity
-@Table(name="STUDENT")
-public class Student implements Serializable 
-{
-  ....
+@Table(name = "PRODUCT_MASTER6")
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE/* ,region = "",include = "" */) // Required -> NONE, READ_ONLY, READ_WRITE, NONSTRICT_READ_WRITE, TRANSACTIONAL
+public class Product {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "PRODUCT_ID")
+	private Long id;
+
+	@Column(name = "NAME")
+	private String name;
+	private String model;
+	private String brand;
+	private String category;
+	private Double price;
+
+	//Constructor()
+	//Getter()
+	//Setter()
+	//toString()
+}
+
 ```
 
----
+Step by step explanation of the program:
 
-### 2. Cache Strategy using with Mapping file(.hbm.xml) .
+1. Before we load any data in our application, all the stats are 0 as expected.
 
-```
-<hibernate-mapping>
-   <class name="Student" table="STUDENT">
-      
-         This class contains the student detail. 
-      
-      <cache usage="read-only">
-      <id column="ID" name="id" type="java.lang.Long">
-         <generator class="native">
-      </generator></id>
-      <property column="STUDENT_NAME" name="studentName" type="java.lang.String">
-      <property column="lCOURSE" name="course" type="java.lang.String">
-      <property column="ROLL_NUMBER" name="rollNumber" type="java.lang.Long">
-   </property></property></property></cache></class>
-</hibernate-mapping>
-```
+2. When we are loading the Employee with id=1 for the first time, it’s first searched into first level cache and then second level cache. If not found in cache, database query is executed and hence fetch count becomes 1. Once the object is loaded, it’s saved into first level cache and second level cache both. So secondary level hit count remains 0 and miss count becomes 1. Notice that put count is 2, that is because Employee object consists of Address too, so both the objects are saved into second level cache and count is increased to 2.
 
-### Concurrency strategies:
+3. Next, we are again loading the employee with id=1, this time it’s present in the first level cache. So you don’t see any database query and all other secondary level cache stats also remains same.
 
-A concurrency strategy is a mediator which responsible for storing items of data in the cache and retrieving them from the cache. If you are going to enable a 
-second-level cache, you will have to decide, for each persistent class and collection, which cache concurrency strategy to use.
+4. Next we are using evict() method to remove the employee object from the first level cache, now when we are trying to load it, hibernate finds it in the second level cache. That’s why no database query is fired and fetch count remains 1. Notice that hit count goes from 0 to 2 because both Employee and Address objects are read from the second level cache. Second level miss and put count remains at the earlier value.
 
-- Transactional: Use this strategy for read-mostly data where it is critical to prevent stale data in concurrent transactions,in the rare case of an update.
+5. Next we are loading an employee with id=3, database query is executed and fetch count increases to 2, miss count increases from 1 to 2 and put count increases from 2 to 4.
 
-- Read-write: Again use this strategy for read-mostly data where it is critical to prevent stale data in concurrent transactions,in the rare case of an update.
+6. Next we are trying to load employee with id=1 in another session, Since hibernate second level cache is shared across sessions, it’s found in the second level cache and no database query is executed. Fetch count, miss count and put count remains same whereas hit count increases from 2 to 4.
 
-- Nonstrict-read-write: This strategy makes no guarantee of consistency between the cache and the database. Use this strategy if data hardly ever changes and a small likelihood of stale data is not of critical concern.
-
-- Read-only: A concurrency strategy suitable for data which never changes. Use it for reference data only.
-
+So it’s clear that our Hibernate second level cache; Hibernate EHCache; is working fine. Hibernate statistics are helpful in finding the bottleneck in the system and optimize it to reduce the fetch count and load more data from the cache.
