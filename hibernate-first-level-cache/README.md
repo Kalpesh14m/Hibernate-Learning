@@ -1,12 +1,14 @@
 # Caching in Hibernate: 
 
+Hibernate much more than an ORM tool i.e. Hibernate provide the lots of other features. In which Cache is very important feature one of them. Hibernate is actually a very powerful, consistent, and reliable database mapping tool.
+Mapping between objects in Java to relational databases has many facets that you must be aware of. Hibernate does a particularly good job of making the process simple to start, and providing the facilities to allow it to scale well and meet exceedingly complex mapping demands.
+
 - First Level Cache 
 
 - Second Level Cache 
  
-Hibernate much more than an ORM tool i.e. Hibernate provide the lots of other features. In which Cache is very important feature one of them. Hibernate is actually a very powerful, consistent, and reliable database mapping tool.
-Mapping between objects in Java to relational databases has many facets that you must be aware of. Hibernate does a particularly good job of making the process simple to start, and providing the facilities to allow it to scale well and meet exceedingly complex mapping demands.
- 
+---
+
 ## Caching in Hibernate
  
 Caching is all about application performance optimization and it sits between your application and the database to avoid the number of database hits as many as possible to give a better performance for performance critical applications.
@@ -18,14 +20,39 @@ Caching is important to Hibernate as well which utilizes a multilevel caching sc
 
 One of the primary concerns of mappings between a database and our Java application is performance.  This is the common concern of the all guys who working with hibernate and spent the more time in ORM tools for performance-enhancing changes to particular queries and retrievals.
 
+1. **First Level Cache:** Hibernate first level cache is associated with the Session object. Hibernate first level cache is enabled by default and there is no way to disable it. However hibernate provides methods through which we can delete selected objects from the cache or clear the cache completely.
+Any object cached in a session will not be visible to other sessions and when the session is closed, all the cached objects will also be lost.
 
-1. The first-level cache – Session (Earlier hibernate already provide this level of cache)
-2. The second-level cache –Session-factory-level cache
-3. The query cache.
+2. **Second Level Cache:** Hibernate Second Level cache is disabled by default but we can enable it through configuration. Currently EHCache and Infinispan provides implementation for Hibernate Second level cache and we can use them. We will look into this in the next tutorial for hibernate caching.
+
+3. **Query Cache:** Hibernate can also cache result set of a query. Hibernate Query Cache doesn’t cache the state of the actual entities in the cache; it caches only identifier values and results of value type. So it should always be used in conjunction with the second-level cache.
+
+---
 
 ### The first-level cache:
 
 The first level cache type is the session cache. The session cache caches object within the current session but this is not enough for long level i.e. session factory scope.
+
+
+**First Level Cache in Hibernate Important Points**
+
+Important Points about First level cache in Hibernate that can be derived from above program are:
+
+1. Hibernate First Level cache is enabled by default, there are no configurations needed for this.
+
+2. Hibernate first level cache is session specific, that’s why when we are getting the same data in same session there is no query fired whereas in other session query is fired to load the data.
+
+3. Hibernate first level cache can have old values, but it didn’t get reflected in the same session. But in other session, we got the updated value.
+
+4. We can use session `evict()` method to remove a single object from the hibernate first level cache.
+
+5. We can use session `clear()` method to clear the cache i.e delete all the objects from the cache.
+
+6. We can use session `contains()` method to check if an object is present in the hibernate cache or not, if the object is found in cache, it returns true or else it returns false.
+
+7. Since hibernate cache all the objects into session first level cache, while running bulk queries or batch updates it’s necessary to clear the cache at certain intervals to avoid memory issues.
+
+---
 
 ### The second-level cache:
 
@@ -79,22 +106,6 @@ public class Student implements Serializable
 
 ### 2. Cache Strategy using with Mapping file(.hbm.xml) .
 
-
-<hibernate-mapping>
-	<class name="com.codedictator.domain.Customer"
-		table="CUSTOMER_MASTER2">
-		<!-- primary key -->
-		<id name="id" column="CUSTOMER_ID">
-			<generator class="identity" />
-		</id>
-
-		<property name="firstName" column="FIRST_NAME" />
-		<property name="lastName" column="LAST_NAME" />
-		<property name="email" column="EMAIL" />
-		<property name="mobile" column="MOBILE"></property>
-	</class>
-</hibernate-mapping>
-
 ```
 <hibernate-mapping>
    <class name="Student" table="STUDENT">
@@ -111,3 +122,17 @@ public class Student implements Serializable
    </property></property></property></cache></class>
 </hibernate-mapping>
 ```
+
+### Concurrency strategies:
+
+A concurrency strategy is a mediator which responsible for storing items of data in the cache and retrieving them from the cache. If you are going to enable a 
+second-level cache, you will have to decide, for each persistent class and collection, which cache concurrency strategy to use.
+
+- Transactional: Use this strategy for read-mostly data where it is critical to prevent stale data in concurrent transactions,in the rare case of an update.
+
+- Read-write: Again use this strategy for read-mostly data where it is critical to prevent stale data in concurrent transactions,in the rare case of an update.
+
+- Nonstrict-read-write: This strategy makes no guarantee of consistency between the cache and the database. Use this strategy if data hardly ever changes and a small likelihood of stale data is not of critical concern.
+
+- Read-only: A concurrency strategy suitable for data which never changes. Use it for reference data only.
+
