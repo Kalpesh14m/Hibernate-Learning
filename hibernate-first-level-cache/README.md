@@ -52,6 +52,145 @@ Important Points about First level cache in Hibernate that can be derived from a
 
 7. Since hibernate cache all the objects into session first level cache, while running bulk queries or batch updates it’s necessary to clear the cache at certain intervals to avoid memory issues.
 
+
+### First level cache retrieval example
+
+In this example, we are fetching student object from the database using a hibernate session. we will retrieve it multiple times and will observe the SQL logs to see the differences
+
+```
+package com.codedictator.test;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import com.codedictator.domain.Product;
+
+public class FirstLevelCacheDemo {
+	public static void main(String[] args) {
+
+		Transaction transaction = null;
+		Configuration configuration = new Configuration().configure();
+		SessionFactory sessionFactory = configuration.buildSessionFactory();
+		try (Session session = sessionFactory.openSession();) {
+
+			// start the transaction
+			transaction = session.beginTransaction();
+
+			// get the student entity using id
+			Product student1 = session.load(Product.class, 1L);
+
+			System.out.println(student1.getName());
+			System.out.println(student1.getModel());
+			System.out.println(student1.getPrice());
+
+			// load student entity by id
+			Product student2 = session.load(Product.class, 1L);
+			System.out.println(student2.getName());
+			System.out.println(student2.getModel());
+			System.out.println(student2.getPrice());
+
+			// commit transaction
+			transaction.commit();
+		}
+	}
+}
+```
+
+```
+Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
+Mobile
+iPhone5
+20000.0
+Mobile
+iPhone5
+20000.0
+```
+
+***As you can see that second “session.load()” statement does not execute the select query again and loads the student entity directly.***
+
+---
+
+### Removing cache objects from first level cache example
+
+Though we can not disable the first level cache in hibernate, we can certainly remove some of the objects from it when needed. This is done using two methods :
+
+- `Session.evict()`
+
+- `Session.clear()`
+
+Here `Session.evict()` is used to remove a particular object from the cache associated with a session, and a `clear()` method is used to remove all cached objects associated with a session. So they are essentially like remove one and remove all.
+
+```
+package com.codedictator.test;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import com.codedictator.domain.Product;
+
+public class RemoveFirstCacheDemo {
+	public static void main(String[] args) {
+		Transaction transaction = null;
+		Configuration configuration = new Configuration().configure();
+		SessionFactory sessionFactory = configuration.buildSessionFactory();
+
+		try (Session session = sessionFactory.openSession();) {
+			// start the transaction
+			transaction = session.beginTransaction();
+
+			// get the student entity using id
+			Product product1 = session.load(Product.class, 1L);
+
+			System.out.println(product1.getName());
+			System.out.println(product1.getModel());
+			System.out.println(product1.getPrice());
+
+			// load student entity by id
+			Product product2 = session.load(Product.class, 1L);
+			System.out.println(product2.getName());
+			System.out.println(product2.getModel());
+			System.out.println(product2.getPrice());
+
+			// remove obj
+			session.evict(product2);
+			System.out.println("==>" + product2.getName());
+
+			// load student entity by id
+			Product product3 = session.load(Product.class, 1L);
+			System.out.println(product3.getName());
+			System.out.println(product3.getModel());
+			System.out.println(product3.getPrice());
+
+			// clear session
+			session.clear();
+			// commit transaction
+			transaction.commit();
+		}
+	}
+}
+```
+
+```
+Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
+Mobile
+iPhone5
+20000.0
+Mobile
+iPhone5
+20000.0
+==>Mobile
+Hibernate: select product0_.PRODUCT_ID as PRODUCT_1_0_0_, product0_.brand as brand2_0_0_, product0_.category as category3_0_0_, product0_.model as model4_0_0_, product0_.NAME as NAME5_0_0_, product0_.price as price6_0_0_ from PRODUCT_MASTER6 product0_ where product0_.PRODUCT_ID=?
+Mobile
+iPhone5
+20000.0
+```
+
+***Clearly, `Session.evict()` method removed the student object from the cache so that it was fetched again from the database.***
+
 ---
 
 ### The second-level cache:
