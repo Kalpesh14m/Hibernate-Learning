@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.codedictator.domain.Customer"
+		table="CUSTOMER_MASTER1">
+		<!-- Primary Key -->
+		<id name="id" column="CUSTOMER_ID">
+			<generator class="identity"></generator>
+		</id>
+
+		<property name="firstName" column="FIRST_NAME" />
+		<property name="lastName" column="LAST_NAME" />
+		<property name="email" column="EMAIL" />
+		<property name="mobile" column="MOBILE" />
+
+	</class>
+</hibernate-mapping>
