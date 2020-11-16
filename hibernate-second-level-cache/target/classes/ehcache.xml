@@ -1,0 +1,11 @@
+<ehcache>
+	<!-- Default for all objects -->
+	<defaultCache eternal="true" timeToLiveSeconds="200"
+		timeToIdleSeconds="100" maxElementsInMemory="200" />
+
+	<!-- For specified object -->
+	<cache name="com.codedictator.domain.Product" eternal="true"
+		timeToLiveSeconds="200" timeToIdleSeconds="100"
+		maxElementsInMemory="200" />
+
+</ehcache>
