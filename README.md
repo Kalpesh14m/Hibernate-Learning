@@ -206,21 +206,13 @@ The Configuration object provides two keys components −
 2. **Class Mapping Setup −** This component creates the connection between the Java classes and database tables.
 
 
-**SessionFactory Object:** Configuration object is used to create a SessionFactory object which in turn configures Hibernate for the application using the supplied configuration file and allows for a Session object to be instantiated. The SessionFactory is a thread safe object and used by all the threads of an application.
+**SessionFactory (org.hibernate.SessionFactory):** A thread-safe (and immutable) representation of the mapping of the application domain model to a database. Acts as a factory for org.hibernate.Session instances. The EntityManagerFactory is the JPA equivalent of a SessionFactory and basically, those two converge into the same SessionFactory implementation.
+A SessionFactory is very expensive to create, so, for any given database, the application should have only one associated SessionFactory. The SessionFactory maintains services that Hibernate uses across all Session(s) such as second-level caches, connection pools, transaction system integrations, etc.
 
-The SessionFactory is a heavyweight object; it is usually created during application start up and kept for later use. You would need one SessionFactory object per database using a separate configuration file. So, if you are using multiple databases, then you would have to create multiple SessionFactory objects.
-Session Object
+**Session (org.hibernate.Session):** A single-threaded, short-lived object conceptually modeling a "Unit of Work". In JPA nomenclature, the Session is represented by an EntityManager.
+Behind the scenes, the Hibernate Session wraps a JDBC java.sql.Connection and acts as a factory for org.hibernate.Transaction instances. It maintains a generally "repeatable read" persistence context (first level cache) of the application domain model.
 
-
-**A Session** is used to get a physical connection with a database. The Session object is lightweight and designed to be instantiated each time an interaction is needed with the database. Persistent objects are saved and retrieved through a Session object.
-
-The session objects should not be kept open for a long time because they are not usually thread safe and they should be created and destroyed them as needed.
-Transaction Object
-
-**A Transaction** represents a unit of work with the database and most of the RDBMS supports transaction functionality. Transactions in Hibernate are handled by an underlying transaction manager and transaction (from JDBC or JTA).
-
-This is an optional object and Hibernate applications may choose not to use this interface, instead managing transactions in their own application code.
-Query Object
+**Transaction (org.hibernate.Transaction):** A single-threaded, short-lived object used by the application to demarcate individual physical transaction boundaries. EntityTransaction is the JPA equivalent and both act as an abstraction API to isolate the application from the underlying transaction system in use (JDBC or JTA).
 
 **Query objects** use SQL or Hibernate Query Language (HQL) string to retrieve data from the database and create objects. A Query instance is used to bind query parameters, limit the number of results returned by the query, and finally to execute the query.
 Criteria Object
