@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.codedictator.domain.Address"
+		table="ADDRESS_MASTER5">
+		<!-- Primary key -->
+		<id name="id" column="address_id">
+			<generator class="identity" />
+		</id>
+		<property name="houseNo" column="HOUSE_NO" />
+		<property name="street" column="STREET" />
+		<property name="city" column="CITY" />
+		<property name="landmark" column="LANDMARK" />
+		<property name="state" column="STATE" />
+		<property name="zipcode" column="ZIPCODE" />
+
+	</class>
+</hibernate-mapping>
