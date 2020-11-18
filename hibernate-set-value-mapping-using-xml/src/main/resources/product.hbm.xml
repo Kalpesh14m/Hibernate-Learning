@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.codedictator.domain.Product"
+		table="PRODUCT_MASTER2">
+		<id name="id" column="product_id">
+			<generator class="identity" />
+		</id>
+
+		<property name="name" column="NAME" />
+		<property name="model" column="MODEL" />
+		<property name="brand" column="BRAND" />
+		<property name="category" column="CATEGORY" />
+		<property name="price" column="PRICE" />
+
+		<!-- Set of value Mapping -->
+		<set name="colors" table="PRODUCT_COLORS2" cascade="all">
+			<key column="product_id" /> <!-- Foreign Key -->
+			<element column="COLOR" type="string" />
+
+		</set>
+
+	</class>
+</hibernate-mapping>
